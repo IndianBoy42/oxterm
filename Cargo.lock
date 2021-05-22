@@ -129,9 +129,16 @@ checksum = "b8f8bdf33df195859076e54ab11ee78a1b208382d3a26ec40d142ffc1ecc49ef"
 name = "oxterm"
 version = "0.1.0"
 dependencies = [
+ "pico-args",
  "serialport",
  "tui",
 ]
+
+[[package]]
+name = "pico-args"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d7afeb98c5a10e0bffcc7fc16e105b04d06729fac5fd6384aebf7ff5cb5a67d"
 
 [[package]]
 name = "pkg-config"
