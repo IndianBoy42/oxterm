@@ -71,19 +71,28 @@ fn main() {
 
     let mut get_value = |keys| {
         pargs
-            .value_from_fn(keys, |s| {
+            .opt_value_from_fn(keys, |s| {
                 if true {
-                    Ok(Some(s.to_owned()))
+                    Ok(s.to_owned())
                 } else {
                     // This line is just for helping type inference
                     Err(MissingArgument)
                 }
             })
-            .or_else(|err| match err {
-                MissingOption(_) => Ok(None),
-                err => Err(err),
-            })
             .unwrap()
+        // .value_from_fn(keys, |s| {
+        //     if true {
+        //         Ok(Some(s.to_owned()))
+        //     } else {
+        //         // This line is just for helping type inference
+        //         Err(MissingArgument)
+        //     }
+        // })
+        // .or_else(|err| match err {
+        //     MissingOption(_) => Ok(None),
+        //     err => Err(err),
+        // })
+        // .unwrap()
     };
 
     let dargs = Args::default();
