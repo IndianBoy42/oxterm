@@ -69,101 +69,86 @@ fn main() {
         std::process::exit(0);
     }
 
-    let mut get_value = |keys| {
-        pargs
-            .opt_value_from_fn(keys, |s| {
-                if true {
-                    Ok(s.to_owned())
-                } else {
-                    // This line is just for helping type inference
-                    Err(MissingArgument)
-                }
-            })
-            .unwrap()
-        // .value_from_fn(keys, |s| {
-        //     if true {
-        //         Ok(Some(s.to_owned()))
-        //     } else {
-        //         // This line is just for helping type inference
-        //         Err(MissingArgument)
-        //     }
-        // })
-        // .or_else(|err| match err {
-        //     MissingOption(_) => Ok(None),
-        //     err => Err(err),
-        // })
-        // .unwrap()
-    };
-
     let dargs = Args::default();
 
-    use pico_args::Error::*;
     let args = Args {
-        port: get_value(["-p", "--port"]).unwrap_or_else(|| {
-            let ports = serialport::available_ports().expect("No ports found!");
-            if ports.len() == 1 {
-                let mut ports = ports;
-                ports.remove(0).port_name
-            } else {
-                // TODO: prettify the output of this section
-                println!("Found ports:");
-                for p in ports {
-                    println!("{:?}", p);
+        port: pargs
+            .opt_value_from_str(["-p", "--port"])
+            .unwrap()
+            .unwrap_or_else(|| {
+                let ports = serialport::available_ports().expect("No ports found!");
+                if ports.len() == 1 {
+                    let mut ports = ports;
+                    ports.remove(0).port_name
+                } else {
+                    // TODO: prettify the output of this section
+                    println!("Found ports:");
+                    for p in ports {
+                        println!("{:?}", p);
+                    }
+                    exit(0)
                 }
-                exit(0)
-            }
-        }),
-        baud_rate: get_value(["-b", "--baud-rate"])
-            .map(|x| {
-                x.parse()
-                    .expect("Baud rate option requires a numerical value")
-            })
+            }),
+        baud_rate: pargs
+            .opt_value_from_str(["-b", "--baud-rate"])
+            .unwrap()
             .unwrap_or(dargs.baud_rate),
-        data_bits: get_value(["-d", "--data-bits"])
-            .map(|x| match x.as_str() {
-                "5" => DataBits::Five,
-                "6" => DataBits::Six,
-                "7" => DataBits::Seven,
-                "8" => DataBits::Eight,
-                _ => panic!("Data bits option passed an invalid value"),
+        data_bits: pargs
+            .opt_value_from_fn(["-d", "--data-bits"], |x| {
+                Ok(match x {
+                    "5" => DataBits::Five,
+                    "6" => DataBits::Six,
+                    "7" => DataBits::Seven,
+                    "8" => DataBits::Eight,
+                    _ => return Err("Data bits option passed an invalid value"),
+                })
             })
+            .unwrap()
             .unwrap_or(dargs.data_bits),
-        flow_control: get_value(["-F", "--flow-control"])
-            .map(|n| match n.to_ascii_lowercase().as_str() {
-                "hardware" | "hw" => FlowControl::Hardware,
-                "software" | "sw" => FlowControl::Software,
-                "none" => FlowControl::None,
-                _ => panic!("Flow Control option passed an invalid value"),
+        flow_control: pargs
+            .opt_value_from_fn(["-F", "--flow-control"], |n| {
+                Ok(match n.to_ascii_lowercase().as_str() {
+                    "hardware" | "hw" => FlowControl::Hardware,
+                    "software" | "sw" => FlowControl::Software,
+                    "none" => FlowControl::None,
+                    _ => return Err("Flow Control option passed an invalid value"),
+                })
             })
+            .unwrap()
             .unwrap_or(dargs.flow_control),
-        parity: get_value(["-P", "--parity"])
-            .map(|n| match n.to_ascii_lowercase().as_str() {
-                "none" => Parity::None,
-                "odd" => Parity::Odd,
-                "even" => Parity::Even,
-                _ => panic!("Parity option passed an invalid value"),
+        parity: pargs
+            .opt_value_from_fn(["-P", "--parity"], |n| {
+                Ok(match n.to_ascii_lowercase().as_str() {
+                    "none" => Parity::None,
+                    "odd" => Parity::Odd,
+                    "even" => Parity::Even,
+                    _ => return Err("Parity option passed an invalid value"),
+                })
             })
+            .unwrap()
             .unwrap_or(dargs.parity),
-        stop_bits: get_value(["-s", "--stop-bits"])
-            .map(|n| match n.to_ascii_lowercase().as_str() {
-                "1" | "one" => StopBits::One,
-                "2" | "two" => StopBits::Two,
-                _ => panic!("Stop Bits option passed an invalid value"),
+        stop_bits: pargs
+            .opt_value_from_fn(["-s", "--stop-bits"], |n| {
+                Ok(match n.to_ascii_lowercase().as_str() {
+                    "1" | "one" => StopBits::One,
+                    "2" | "two" => StopBits::Two,
+                    _ => return Err("Stop Bits option passed an invalid value"),
+                })
             })
+            .unwrap()
             .unwrap_or(dargs.stop_bits),
-        timeout: get_value(["-T", "--timeout"])
-            .map(|n| {
-                n.parse()
-                    .expect("Timeout option requires a numerical value")
-            })
+        timeout: pargs
+            .opt_value_from_str(["-T", "--timeout"])
+            .unwrap()
             .map(|t| Duration::from_millis(t))
             .unwrap_or(dargs.timeout),
-        mode: get_value(["-w", "--mode"]).unwrap_or(dargs.mode),
-        capacity: get_value(["-c", "--capacity"])
-            .map(|x| {
-                x.parse()
-                    .expect("Capacity option requires a numerical value")
-            })
+        mode: pargs
+            .opt_value_from_str(["-w", "--mode"])
+            .unwrap()
+            .unwrap_or(dargs.mode),
+        capacity: pargs
+            .opt_value_from_str(["-c", "--capacity"])
+            .unwrap()
             .unwrap_or(dargs.capacity),
         ..dargs
     };
